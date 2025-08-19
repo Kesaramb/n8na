@@ -8,6 +8,8 @@ import {
 	deleteDataStoreApi,
 	updateDataStoreApi,
 	addDataStoreColumnApi,
+	deleteDataStoreColumnApi,
+	moveDataStoreColumnApi,
 } from '@/features/dataStore/dataStore.api';
 import type { DataStore, DataStoreColumnCreatePayload } from '@/features/dataStore/datastore.types';
 import { useProjectsStore } from '@/stores/projects.store';
@@ -50,6 +52,28 @@ export const useDataStoreStore = defineStore(DATA_STORE_STORE, () => {
 		return deleted;
 	};
 
+	const deleteDataStoreColumn = async (
+		datastoreId: string,
+		projectId: string,
+		columnId: string,
+	) => {
+		const deleted = await deleteDataStoreColumnApi(
+			rootStore.restApiContext,
+			datastoreId,
+			projectId,
+			columnId,
+		);
+		if (deleted) {
+			const index = dataStores.value.findIndex((store) => store.id === datastoreId);
+			if (index !== -1) {
+				dataStores.value[index].columns = dataStores.value[index].columns.filter(
+					(col) => col.id !== columnId,
+				);
+			}
+		}
+		return deleted;
+	};
+
 	const updateDataStore = async (datastoreId: string, name: string, projectId?: string) => {
 		const updated = await updateDataStoreApi(
 			rootStore.restApiContext,
@@ -71,6 +95,7 @@ export const useDataStoreStore = defineStore(DATA_STORE_STORE, () => {
 			id: datastoreId,
 		});
 		if (response.data.length > 0) {
+			dataStores.value = response.data;
 			return response.data[0];
 		}
 		return null;
@@ -104,6 +129,36 @@ export const useDataStoreStore = defineStore(DATA_STORE_STORE, () => {
 		return newColumn;
 	};
 
+	const moveDataStoreColumn = async (
+		datastoreId: string,
+		projectId: string,
+		columnId: string,
+		targetIndex: number,
+	) => {
+		const moved = await moveDataStoreColumnApi(
+			rootStore.restApiContext,
+			datastoreId,
+			projectId,
+			columnId,
+			targetIndex,
+		);
+		if (moved) {
+			const dsIndex = dataStores.value.findIndex((store) => store.id === datastoreId);
+			const fromIndex = dataStores.value[dsIndex].columns.findIndex((col) => col.id === columnId);
+			dataStores.value[dsIndex].columns = dataStores.value[dsIndex].columns.map((col) => {
+				if (col.id === columnId) return { ...col, index: targetIndex };
+				if (fromIndex < targetIndex && col.index > fromIndex && col.index <= targetIndex) {
+					return { ...col, index: col.index - 1 };
+				}
+				if (fromIndex > targetIndex && col.index >= targetIndex && col.index < fromIndex) {
+					return { ...col, index: col.index + 1 };
+				}
+				return col;
+			});
+		}
+		return moved;
+	};
+
 	return {
 		dataStores,
 		totalCount,
@@ -114,5 +169,7 @@ export const useDataStoreStore = defineStore(DATA_STORE_STORE, () => {
 		fetchDataStoreDetails,
 		fetchOrFindDataStore,
 		addDataStoreColumn,
+		deleteDataStoreColumn,
+		moveDataStoreColumn,
 	};
 });
