@@ -4,11 +4,11 @@
   "private": true,
   "homepage": "https://n8n.io",
   "engines": {
-    "node": ">=16.9",
-    "pnpm": ">=7.5"
+    "node": ">=20.19 <=24.x"
   },
-  "packageManager": "pnpm@7.14.2",
+  "packageManager": "pnpm@9.9.0",
   "scripts": {
+    "prebuild": "bash scripts/check-node.sh",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "clean": "turbo run clean --parallel",
