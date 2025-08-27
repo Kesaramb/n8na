@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "https://n8n.io",
   "engines": {
-    "node": ">=16.9",
+    "node": ">=20.19 <=24.x",
     "pnpm": ">=7.5"
   },
   "packageManager": "pnpm@7.14.2",
